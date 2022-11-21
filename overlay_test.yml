@@ -1,0 +1,19 @@
+# See example_config.yml for an explanation of all the accepted fields
+overlay_test:
+   path: /etc/opt/srlinux/appmgr/user_agents/
+   launch-command: /etc/opt/srlinux/appmgr/user_agents/overlay_test.sh
+   search-command: /bin/bash /etc/opt/srlinux/appmgr/user_agents/overlay_test.sh
+   wait-for-config: No
+   failure-threshold: 100
+   failure-action: wait=forever
+   yang-modules:
+       names: 
+           - "overlay_test"
+       source-directories:
+            - "/etc/opt/srlinux/appmgr/user_agents/yang/"
+            - "/opt/srlinux/models/srl_nokia/models/common/"
+            - "/opt/srlinux/models/srl_nokia/models/network-instance/"
+            - "/opt/srlinux/models/srl_nokia/models/interfaces/"
+            - "/opt/srlinux/models/srl_nokia/models/qos/"
+            - "/opt/srlinux/models/srl_nokia/models/routing-policy/"
+            - "/opt/srlinux/models/srl_nokia/models/system/"

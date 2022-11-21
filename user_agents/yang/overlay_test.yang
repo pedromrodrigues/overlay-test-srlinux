@@ -1,0 +1,196 @@
+module overlay_test {
+
+    yang-version 1.1;
+
+    namespace "urn:srl_test/overlay_test";
+
+    prefix "overlay_test";
+
+    import srl_nokia-common {
+        prefix srl_nokia-comm;
+    }
+
+    import srl_nokia-network-instance {
+        prefix srl-netinst;
+    }
+
+    revision "2022-03-30" {
+        description "Initial revision";
+        reference "TDB";
+    }
+
+    grouping overlay-test-state {
+        container overlay-test {
+            presence "Software agent configuration and state";
+            description "Operational state for Ping agent";
+
+            leaf admin-state {
+                type srl_nokia-comm:admin-state;
+                default "enable";
+            }
+
+            list targets {
+                description "State of the targets";
+
+                key "IP-FQDN";
+
+                must '(test-tool != "httping") or boolean(port)' {
+                    error-message "Port option is only available for httping test-tool.";
+                }
+
+                leaf IP-FQDN {
+                    description "Destination IP/FQDN";
+                    type string;
+                    mandatory true;
+                }
+
+                leaf admin-state {
+                    type srl_nokia-comm:admin-state;
+                    default "disable";
+                }
+
+                leaf network-instance {
+                    type leafref {
+                        path "/srl-netinst:network-instance/srl-netinst:name";
+                }
+                must '(/srl-netinst:network-instance[name = current()]/type = "ip-vrf" or 
+                       /srl-netinst:network-instance[name = current()]/type = "default")' {
+                    error-message "Only network-instances of type ip-vrf or default are allowed.";
+                    }
+                    mandatory true;
+                }
+
+                leaf test-tool {
+                    description "Tool to test the service";
+                    type enumeration {
+                        enum ping {
+                            value 0;
+                        }
+                        enum httping {
+                            value 1;
+                        }
+                    }
+                    mandatory true;
+                }
+
+                leaf number-of-tests {
+                    description "Number of tests to run";
+                    type uint64;
+                    mandatory true;
+                }
+                must '(number-of-tests > 0)' {
+                    error-message "Number of tests must be greater than 0.";
+                }
+
+                leaf source-ip {
+                    description "Source IP address";
+                    type string;
+                    mandatory true;
+                }
+
+                leaf port {
+                    description "Port";
+                    type uint16{
+                        range "1..65535";
+                    }
+                    must '../test-tool = "httping"' {
+                        error-message "Option only available for httping.";
+                    }
+                }
+
+                leaf number-of-packets {
+                    description "Number of packets to be sent on each test";
+                    type uint8 {
+                        range "1..255";
+                    }
+                    default 1;
+                }
+                /* must "number(number-of-packets) > 0" {
+                    error-message "Must be greater than 0.";
+                } */
+
+                leaf interval-period {
+                    description "Interval period of time in seconds between each test";
+                    type uint16 {
+                        range "1..65535";
+                    }
+                    default 1;
+                }
+                /* must "number(interval-period) > 0" {
+                    error-message "Must be greater than 0.";
+                } */
+
+            }
+        
+            list state {
+                description "List of service peers";
+                config false;
+
+                key "IP";
+
+                leaf IP {
+                    type string;
+                    description "Connection IP for this peer";
+                }
+
+                leaf last-update {
+                    type srl_nokia-comm:date-and-time-delta;
+                    description "The date and time of the last update of this entry";
+                }
+
+                leaf tests-performed {
+                    type uint64;
+                    description "Total of tests performed";
+                    default 0;
+                }
+
+                leaf successful-tests {
+                    type uint64;
+                    description "Total of successful tests";
+                    default 0;
+                }
+
+                leaf unsuccessful-tests {
+                    type uint64;
+                    description "Total of unsuccessful tests";
+                    default 0;
+                }
+
+                leaf status-up {
+                    type boolean;
+                    description "Status of the service";
+                }
+
+                leaf rtt-min-ms {
+                    type decimal64 {
+                        fraction-digits 3;
+                    }
+                    description "Round trip minimum time in ms";
+                }
+
+                leaf rtt-max-ms {
+                    type decimal64 {
+                        fraction-digits 3;
+                    }
+                    description "Round trip maximum time in ms"; 
+                }
+
+                leaf rtt-avg-ms {
+                    type decimal64 {
+                        fraction-digits 3;
+                    }
+                    description "Round trip average time in ms";
+                }
+
+                leaf rtt-stddev {
+                    type decimal64 {
+                        fraction-digits 3;
+                    }
+                    description "Round trip standard deviation in ms";
+                }
+            }
+        }
+    }
+
+    uses overlay-test-state;
+}
